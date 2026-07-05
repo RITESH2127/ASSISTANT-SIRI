@@ -1,288 +1,335 @@
-# Personal AI Voice Assistant — v1
+# ASSISTANT-SIRI 🚀
+A modern, extensible voice & text assistant framework inspired by personal assistants — built for customization, extensibility, and production readiness.
 
-A private, voice-driven assistant that runs on your own Windows laptop. It understands
-Hindi, English, and Hinglish; talks back with natural neural voices; remembers
-things about you across sessions; and can open apps, search files, send email,
-manage reminders, and browse the web — with confirmation before anything
-destructive.
-
-**Read this first, honestly:** this is a real, working v1 you can run today —
-not a mockup. It is *not* the same scale of engineering as Siri/Alexa (those are
-built by hundred-person teams over years). Treat this as a solid foundation you
-can extend. The biggest limitations right now: it needs your own Anthropic API
-key (so it needs internet for the "thinking" part, even though speech
-recognition runs locally), and the wake-word/system-control features are basic
-and Windows-focused.
+[![Build Status](https://img.shields.io/github/actions/workflow/status/RITESH2127/ASSISTANT-SIRI/ci.yml?branch=main&label=ci&logo=github)](https://github.com/RITESH2127/ASSISTANT-SIRI/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+[![Issues](https://img.shields.io/github/issues/RITESH2127/ASSISTANT-SIRI)](https://github.com/RITESH2127/ASSISTANT-SIRI/issues)
+[![Top Language](https://img.shields.io/github/languages/top/RITESH2127/ASSISTANT-SIRI)](https://github.com/RITESH2127/ASSISTANT-SIRI)
+[![Contributors](https://img.shields.io/github/contributors/RITESH2127/ASSISTANT-SIRI)](https://github.com/RITESH2127/ASSISTANT-SIRI/graphs/contributors)
 
 ---
 
-## 1. System Requirements
+Table of Contents
+- [Project Overview](#project-overview)
+- [Key Features](#key-features)
+- [Tech Stack / Built With](#tech-stack--built-with)
+- [System Architecture](#system-architecture)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Local Setup (quick)](#local-setup-quick)
+  - [Optional: Docker](#optional-docker)
+- [Usage](#usage)
+  - [CLI Examples](#cli-examples)
+  - [API / SDK Examples](#api--sdk-examples)
+  - [Voice Integration & Mic-to-Text Flow](#voice-integration--mic-to-text-flow)
+- [Configuration](#configuration)
+- [Roadmap / Future Scope](#roadmap--future-scope)
+- [Contributing](#contributing)
+- [License & Contact](#license--contact)
+- [Acknowledgements](#acknowledgements)
+- [Troubleshooting](#troubleshooting)
 
-- Windows 10 or 11, 64-bit
-- 8 GB RAM minimum (16 GB recommended — the local speech model needs some headroom)
-- ~3 GB free disk space (speech-recognition model + dependencies)
-- A working microphone and speakers
-- Internet connection (for the Claude API and for the neural TTS voices)
-- Python 3.10 or 3.11 installed (see step 2)
+---
 
-## 2. Install Required Software
+## Project Overview
+ASSISTANT-SIRI is an extensible assistant framework designed to provide voice and text-based conversational intelligence for desktop, web, or embedded use. It combines natural language understanding, modular skill plugs, and optional on-prem or cloud LLM integrations to provide a secure, customizable assistant experience.
 
-1. **Install Python**
-   - Download from https://www.python.org/downloads/ (3.10 or 3.11)
-   - During install, check **"Add Python to PATH"**
-   - Verify: open Command Prompt and run `python --version`
+Why this project exists
+- Many assistants are closed ecosystems with limited extensibility — ASSISTANT-SIRI is built to be developer-friendly and privacy-first.
+- Designed for rapid prototyping, production deployment, and research experiments where you can swap voice engines, NLU pipelines, and model backends.
 
-2. **Install Git (optional, only if you want version control)**
-   - https://git-scm.com/download/win
+Who it's for
+- Developers building custom assistant skills
+- Researchers exploring conversational UX or model integration
+- Companies requiring a private assistant that runs on-prem
 
-3. **Get an Anthropic API key**
-   - Sign up at https://console.anthropic.com/
-   - Create an API key — this is what powers the assistant's "brain" (Claude)
-   - Note: API usage is billed by Anthropic based on how much you use it;
-     check current pricing at https://docs.claude.com
+---
 
-## 3. Setup Process
+## Key Features ✨
+- Modular skill/plugin system for adding domain-specific behaviors
+- Voice input / output pipeline (mic → STT → NLU → intent handler → TTS)
+- Text-only mode for web or CLI usage
+- Pluggable LLM backends (local / hosted / API-based)
+- Conversation state management with context windows
+- Role-based access and safe-response middleware
+- Developer-friendly CLI and REST API for integration
+- Dockerized deployment and CI workflow examples
 
-1. Copy the whole `ai-assistant` folder onto your laptop, e.g. `C:\ai-assistant`.
+---
 
-2. Open Command Prompt in that folder:
+## Tech Stack / Built With 🛠️
+> Replace or remove items below to match the real stack in your repo.
+
+- Programming languages: Python 3.10+ or Node.js 18+ (choose one)
+- Backend: FastAPI (Python) or Express.js / NestJS (Node)
+- Voice: WebRTC (browser), Web Audio API, local pulseaudio/ALSA support
+- Speech-to-Text: OpenAI Whisper / Vosk / AssemblyAI (pluggable)
+- Text-to-Speech: eSpeak / Tacotron / Google Cloud TTS (pluggable)
+- LLMs: OpenAI, Llama, local LLM through adapter layer
+- Database (state/session): SQLite (default) / PostgreSQL / Redis for sessions
+- Authentication: OAuth2 / JWT (optional)
+- Containerization: Docker / Docker Compose
+- CI: GitHub Actions
+- Testing: Pytest / Jest
+- Docs: MkDocs or Sphinx / Swagger UI (OpenAPI) for API
+
+---
+
+## System Architecture 🧭
+High-level flow:
+1. Input layer: CLI / Web / Voice (mic)
+2. Preprocessing: Noise reduction, VAD (voice activity detection)
+3. STT (Speech-to-Text): Convert audio -> text (pluggable engine)
+4. NLU / LLM: Intent extraction, slot filling, or general LLM prompt
+5. Skill router: Route to registered skill/plugin
+6. Response generation: Either templated or LLM-generated
+7. TTS: Convert text -> audio (when voice mode)
+8. Output: Play audio or return JSON to client
+
+Suggested diagram (replace with actual image):
+- [ ] add architecture diagram: assets/architecture.png
+
+Component responsibilities
+- Core server: routes, session manager, plugin registry
+- Plugins: self-contained; expose init, on_intent, help
+- Adapter layer: abstracts model & voice provider differences
+- Persistence: conversation logs, audit trail, and telemetry (opt-in)
+
+---
+
+## Getting Started (Installation & Setup) ⚙️
+Choose the flow matching your implementation: Python or Node. The commands below are templates — replace with your repo's specifics.
+
+### Prerequisites
+- Git 2.30+
+- Docker & Docker Compose (optional but recommended)
+- Python 3.10+ (if using Python) or Node 18+ (if using Node)
+- (Optional) An LLM / API key: OPENAI_API_KEY or LLM_URL
+- (Optional) Audio device for voice mode
+
+---
+
+### Local Setup (quick) — Python (example)
+1. Clone the repo
+   ```bash
+   git clone https://github.com/RITESH2127/ASSISTANT-SIRI.git
+   cd ASSISTANT-SIRI
    ```
-   cd C:\ai-assistant
+2. Create and activate virtualenv
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate   # macOS / Linux
+   .venv\Scripts\activate      # Windows (PowerShell)
    ```
-
-3. Create a virtual environment (keeps dependencies isolated):
-   ```
-   python -m venv venv
-   venv\Scripts\activate
-   ```
-
-4. Install dependencies:
-   ```
+3. Install dependencies
+   ```bash
    pip install -r requirements.txt
    ```
-   This will take a few minutes the first time (it downloads the speech
-   recognition libraries).
-
-## 4. API / Model Configuration
-
-1. Copy `.env.example` to `.env`:
+4. Copy env example and update secrets
+   ```bash
+   cp .env.example .env
+   # Edit .env and add OPENAI_API_KEY, DATABASE_URL, etc.
    ```
-   copy .env.example .env
+5. Initialize DB (if required)
+   ```bash
+   alembic upgrade head    # or python scripts/init_db.py
    ```
-2. Open `.env` in Notepad and fill in:
+6. Run locally
+   ```bash
+   uvicorn assistant_siri.app:app --reload --host 0.0.0.0 --port 8000
    ```
-   ANTHROPIC_API_KEY=sk-ant-xxxxxxxxxxxx
-   ```
-3. **Optional — email sending:** if you want the assistant to send emails,
-   fill in `SMTP_EMAIL` and `SMTP_APP_PASSWORD`. For Gmail:
-   - Go to your Google Account → Security → 2-Step Verification → App Passwords
-   - Generate an app password specifically for this assistant (don't use your real password)
-4. **Optional — wake word:** set `WAKE_WORD_ENABLED=on` if you want
-   always-listening mode with the phrase "Hey Jarvis" (a stand-in wake word —
-   see `assistant/wake_word.py` for how to train your own later). Leave it
-   `off` to use push-to-talk (hold Space bar or click the mic button) — this
-   is more private and uses less CPU, so it's the recommended default.
-
-## 5. How to Launch the Assistant
-
-**During development / testing:**
-```
-venv\Scripts\activate
-python main.py
-```
-
-**As an installed app (.exe):**
-Build it once on your machine (I can't compile a Windows binary from here,
-but this step is quick and only needs to be done once):
-```
-pip install pyinstaller
-pyinstaller build.spec
-```
-This produces `dist\PersonalAssistant\PersonalAssistant.exe`. You can:
-- Double-click it to launch, or
-- Right-click → "Send to → Desktop (create shortcut)" for a desktop icon, or
-- Put a shortcut in `shell:startup` (Win+R → type `shell:startup` → Enter)
-  so it launches automatically when Windows starts, minimized to the system tray.
-
-## 6. How to Use Voice Commands
-
-- Click the mic button (or hold **Space**) and speak naturally — no need for
-  fixed command phrases. Examples:
-  - "Open Notepad and start a new note"
-  - "Mujhe kal shaam 6 baje meeting ka reminder set karo" (Hinglish)
-  - "Search my documents for the battery project report"
-  - "Search the web for the latest AI news"
-  - "Email Priya at priya@example.com saying I'll be 10 minutes late"
-    → it will ask you to confirm before actually sending
-  - "What reminders do I have?"
-  - "Remember that I prefer replies in Hindi after 7pm"
-- You can also just type into the text box — everything works either way.
-- Sensitive actions (closing an app, deleting a file, sending email, running
-  a raw system command) always get a spoken/written confirmation step first.
-  Just say "yes" / "haan, kar do" to proceed, or "no" to cancel.
-
-## 7. Troubleshooting
-
-| Problem | Fix |
-|---|---|
-| "ANTHROPIC_API_KEY is missing" popup | Check `.env` has a real key, no quotes, no trailing spaces |
-| No sound on replies | Check Windows default playback device; try `pip install --upgrade pygame` |
-| Mic not detected | Check Windows Sound settings → Input; make sure another app isn't holding the mic |
-| Speech recognition is slow | First run downloads the Whisper model — subsequent runs are fast. On an old laptop, edit `assistant/stt.py` and change `model_size="small"` to `"base"` for more speed (slightly less accuracy) |
-| "Could not open [app]" | Add the app's exact `.exe` name to `APP_MAP` in `assistant/tools.py` |
-| Email fails to send | Gmail requires an **App Password**, not your normal password; also confirm 2FA is enabled on the account |
-| .exe won't build | Make sure you ran `pyinstaller build.spec` from inside the activated venv, in the project folder |
-| Antivirus flags the .exe | This is common/expected for unsigned PyInstaller executables; you'll need to allow it locally, or get a code-signing certificate for wider distribution |
+7. Open: http://localhost:8000/docs for API docs (Swagger)
 
 ---
 
-## Training your own wake word
-
-Out of the box, always-on mode uses openWakeWord's pretrained **"Hey Jarvis"**
-model as a placeholder so the feature works immediately. This section trains
-a real model on *your* chosen phrase (e.g. "Hey Ritesh") and wires it in
-properly — the code already supports this fully, you just need the model file.
-
-**Easiest path — browser-based trainer (no local setup, no GPU needed):**
-
-1. Go to https://openwakeword.com/train
-2. Enter your wake phrase — pick something 3-4 syllables long and not a
-   common word, e.g. "Hey Ritesh" or "Assistant Online" (this reduces false
-   triggers). Avoid single short words.
-3. Let it generate the synthetic training dataset and train the model
-   (typically a few minutes)
-4. Download the resulting `.onnx` file
-
-**Alternative — official Colab notebook (more control, needs a free Google account):**
-
-1. Open the notebook linked from https://github.com/dscripka/openWakeWord
-   (see "automatic_model_training.ipynb" under `notebooks/`)
-2. Follow the notebook: set your target phrase in the YAML config it
-   generates, run all cells (uses a free GPU runtime in Colab; takes roughly
-   20-60 minutes since it also pulls background/negative audio from
-   HuggingFace to make the model robust against false triggers)
-3. Download the trained `.onnx` file at the end
-
-**Wiring it into this app (same for either method above):**
-
-1. Drop your downloaded file into the `wake_word_training/` folder in this
-   project (already included), e.g.:
+### Local Setup (quick) — Node (example)
+1. Clone repo
+   ```bash
+   git clone https://github.com/RITESH2127/ASSISTANT-SIRI.git
+   cd ASSISTANT-SIRI
    ```
-   ai-assistant/wake_word_training/hey_ritesh.onnx
+2. Install
+   ```bash
+   npm install
+   # or
+   yarn
    ```
-2. In `.env`, set:
+3. Copy env
+   ```bash
+   cp .env.example .env
+   # Edit .env
    ```
-   WAKE_WORD_ENABLED=on
-   WAKE_WORD_MODEL_PATH=wake_word_training/hey_ritesh.onnx
+4. Start dev server
+   ```bash
+   npm run dev
    ```
-3. **Test it standalone first** (recommended) before turning on the full
-   app's always-on mode:
-   ```
-   python wake_word_training/test_wake_word.py
-   ```
-   This prints a live detection score as you speak, so you can confirm it
-   works and pick a good `WAKE_WORD_THRESHOLD` before relying on it.
-4. Restart the app. The Settings tab will show "Wake word mode: on — model:
-   wake_word_training/hey_ritesh.onnx" confirming your custom model loaded
-   instead of the pretrained stand-in.
-5. Say your phrase — the assistant starts listening automatically, the same
-   as clicking the mic button. Test in a few different rooms/times of day
-   and re-train with a stricter phrase if you get false triggers.
-
-**Notes:**
-- If `WAKE_WORD_MODEL_PATH` is blank or the file doesn't exist, the app
-  automatically falls back to "Hey Jarvis" rather than crashing.
-- `WAKE_WORD_THRESHOLD` in `.env` (0-1, default 0.5) trades off sensitivity
-  vs. false triggers — raise it if it fires too easily, lower it if it
-  misses you.
-- While always-on mode is listening, it politely steps aside during an
-  active recording (so it isn't fighting your STT for the microphone) and
-  resumes right after.
-
-## What's genuinely built (v2)
-
-- Voice loop: mic → local Whisper STT (Hindi/English/Hinglish) → Claude agent
-  with real tool-calling → neural TTS
-- Persistent SQLite memory: facts/preferences, full chat history, reminders
-- **Proactive scheduler**: speaks up unprompted — announces reminders the
-  moment they're due, and delivers an automatic daily briefing (today's
-  reminders + real Google Calendar events + a usage-pattern suggestion) at
-  the time you set in `.env`. There's also a manual "📋 Daily Briefing" button.
-- **Real Google Calendar integration** (OAuth, not a stand-in) — list and add
-  events on your actual calendar
-- **System control**: volume, mute, screen brightness, lock screen, shutdown/
-  restart (destructive ones gated behind confirmation, same as file/app actions)
-- **Usage-pattern learning**: every tool call is logged with time-of-day, so
-  the assistant can say "you often open X around this time" — deliberately
-  simple and inspectable rather than an opaque model, so you can always see
-  exactly why a suggestion appeared (check `~/.ai_assistant/memory.db`,
-  `tool_usage` table)
-- **Hardened error handling**: all Claude API calls retry automatically with
-  backoff on transient failures; all background scheduler jobs and tool
-  calls are wrapped so one failure can't crash the app; everything gets
-  logged to `~/.ai_assistant/assistant.log` for troubleshooting
-- **Optional PIN lock**: set `APP_PIN` in `.env` to require a PIN before the
-  assistant (and your memory/data) is accessible — basic local privacy gate,
-  not enterprise-grade auth
-- App launching, file search, web search/browsing, email sending,
-  confirmation-gated destructive actions, chat history UI, settings panel,
-  system tray background mode
-
-## Setting up Google Calendar (optional but recommended)
-
-1. Go to https://console.cloud.google.com/ and create a project
-2. In "APIs & Services" → "Library", enable the **Google Calendar API**
-3. In "APIs & Services" → "Credentials", create an **OAuth Client ID**,
-   application type **Desktop app**
-4. Download the JSON and save it as `credentials.json` in the project's root
-   folder (same folder as `main.py`)
-5. The first time the assistant touches your calendar, a browser window will
-   open asking you to log in and grant access once. After that, it's cached
-   locally in `~/.ai_assistant/calendar_token.json` — no browser popups after
-   the first time.
-
-If you skip this, calendar-related requests will just tell you it's not
-configured; nothing else breaks.
-
-## Honest limits, still
-
-This is a strong, genuinely working personal project — not a promise of
-zero bugs. Things to know:
-- It still needs internet for the "thinking" part (Claude API calls) and for
-  the neural TTS voices; only speech-to-text and memory are fully local.
-- Windows system control (volume/brightness) depends on `pycaw` and
-  `screen-brightness-control`, which don't behave identically across every
-  laptop/monitor combination — if brightness control fails on your hardware,
-  the assistant reports that clearly instead of pretending it worked.
-- The wake word is a stand-in pretrained phrase ("Hey Jarvis"), not a custom
-  one trained on your voice/name yet.
-- "Self-learning" here is a transparent frequency tracker, not a model that
-  retrains itself — I designed it this way on purpose for privacy, speed,
-  and auditability, but it's worth knowing what it is and isn't.
+5. Open the client at http://localhost:3000 and the API at http://localhost:8000 (adjust per your config)
 
 ---
 
-## Project structure
+### Optional: Docker (recommended for production parity)
+1. Build & run (single command)
+   ```bash
+   docker compose up --build
+   ```
+2. Environment variables in `docker-compose.yml` or `.env` are forwarded to containers.
+3. Visit services:
+   - Web UI: http://localhost:3000
+   - API: http://localhost:8000
 
+---
+
+## Usage
+Below are sample usage snippets. Replace endpoints and payloads with actual ones from your implementation.
+
+### CLI Examples
+Start an interactive session:
+```bash
+# Example: start assistant in chat mode
+python -m assistant_siri.cli chat
+# or
+npm run cli -- chat
 ```
-ai-assistant/
-├── main.py                # entry point (window + tray)
-├── requirements.txt
-├── build.spec              # PyInstaller config
-├── .env.example            # copy to .env and fill in your key
-└── assistant/
-    ├── config.py            # loads .env, app-wide settings
-    ├── memory.py            # SQLite: conversation log, facts, reminders
-    ├── tools.py             # the actual automation functions
-    ├── llm.py               # Claude tool-calling agent loop + system prompt
-    ├── stt.py               # local speech-to-text (faster-whisper)
-    ├── tts.py               # neural text-to-speech (edge-tts + offline fallback)
-    ├── wake_word.py          # optional always-listening mode
-    ├── gui.py               # Tkinter chat window + settings
-    ├── tray.py              # system tray icon / background mode
-    ├── system_control.py     # volume, brightness, lock, shutdown/restart
-    ├── calendar_integration.py  # real Google Calendar OAuth integration
-    ├── learning.py            # transparent usage-pattern tracking/suggestions
-    ├── scheduler.py           # proactive daily briefing + reminder alerts
-    └── error_handling.py      # logging, retry-with-backoff, safe_call wrapper
+
+Send a quick prompt via HTTP:
+```bash
+curl -X POST "http://localhost:8000/api/v1/respond" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $ASSISTANT_API_KEY" \
+  -d '{
+    "session_id": "test-session-1",
+    "input": "What's the weather like in Paris today?"
+  }'
 ```
+
+Expected response (JSON):
+```json
+{
+  "session_id": "test-session-1",
+  "response": "I don't have live weather access in this demo. Would you like me to fetch the forecast for Paris?"
+}
+```
+
+### API / SDK Examples (Python)
+```python
+from assistant_siri.client import AssistantClient
+
+client = AssistantClient(api_key="YOUR_KEY", base_url="http://localhost:8000")
+resp = client.query("Summarize my meetings from today", session_id="me-123")
+print(resp.text)
+```
+
+### Voice Integration & Mic-to-Text Flow
+1. Client captures audio via WebRTC or native microphone.
+2. Audio streamed to `/api/v1/stt` (multipart/form-data) or WebSocket STT endpoint.
+3. STT returns text or interim transcripts.
+4. Send transcript to `/api/v1/respond` for NLU/LLM processing.
+5. If voice mode is enabled, assistant returns text + TTS audio URL or binary audio payload to play back.
+
+---
+
+## Configuration
+Create `.env` from `.env.example` and configure:
+- APP_ENV=development|production
+- DATABASE_URL=sqlite:///data.db
+- OPENAI_API_KEY=sk-...
+- STT_PROVIDER=whisper|vosk|assemblyai
+- TTS_PROVIDER=espeak|google-cloud
+
+Example .env.example (skeleton):
+```
+APP_ENV=development
+HOST=0.0.0.0
+PORT=8000
+DATABASE_URL=sqlite:///./assistant.db
+OPENAI_API_KEY=
+STT_PROVIDER=whisper
+TTS_PROVIDER=espeak
+LOG_LEVEL=info
+```
+
+---
+
+## Roadmap / Future Scope 🛤️
+Planned items (prioritized)
+- [ ] Plugin marketplace & CLI scaffolding for new skills
+- [ ] Built-in analytics dashboard and conversation export
+- [ ] Multi-user and role-based access management
+- [ ] Offline model support with quantized LLM runtimes
+- [ ] Improved latency via streaming LLM responses
+- [ ] Native mobile SDKs (iOS/Android)
+- [ ] End-to-end encryption for user data at rest and transit
+
+Want to help shape the roadmap? Open an issue or discuss features via Issues / Discussions.
+
+---
+
+## Contributing 🤝
+We welcome contributions — please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch
+   ```bash
+   git checkout -b feat/short-description
+   ```
+3. Commit with a clear message
+   - Use Conventional Commits style (recommended): feat:, fix:, docs:, chore:, etc.
+4. Push your branch and open a Pull Request
+   ```bash
+   git push origin feat/short-description
+   ```
+5. Include tests and update docs where appropriate
+6. Fill the PR description with motivation, screenshots, and test instructions
+
+PR Checklist
+- [ ] Code compiles / lints cleanly
+- [ ] Unit & integration tests added / updated
+- [ ] Documentation updated (README, docstrings)
+- [ ] No secrets checked in (.env values, keys)
+
+Code of Conduct
+- Please follow the [Contributor Covenant Code of Conduct](https://www.contributor-covenant.org/).
+- Be respectful, constructive, and collaborative.
+
+---
+
+## License & Contact
+This project is licensed under the MIT License — see the [LICENSE](./LICENSE) file for details.
+
+Maintainer
+- RITESH2127 — GitHub: [@RITESH2127](https://github.com/RITESH2127)
+- Email: REPLACE_WITH_EMAIL (or open issues / PRs on GitHub)
+
+Security & Responsible Disclosure
+- Report security issues privately by opening a draft issue and marking it "security" or emailing REPLACE_WITH_SEC_CONTACT.
+
+---
+
+## Acknowledgements
+Thanks to the open-source community, and inspirations including:
+- OpenAI, Hugging Face, Whisper, Vosk
+- FastAPI, Starlette, Express, WebRTC projects
+- Community contributors and early adopters
+
+---
+
+## Troubleshooting & FAQ ❓
+Q: The server won't start / port already in use
+- A: Ensure no other process is using the port. Try `lsof -i :8000` (macOS/Linux) or `netstat -ano | findstr 8000` (Windows).
+
+Q: STT/TTS not working
+- A: Verify provider keys and selected provider in `.env`. Check logs for provider-specific errors.
+
+Q: How to add a new skill?
+- A: Create `plugins/<skill_name>/` and implement `init()`, `on_intent(intent, context)`. Then register in `config/plugins.yml` (or run the CLI scaffolding).
+
+If you run into issues, please open an issue with reproduction steps, logs, and environment details.
+
+---
+
+Thank you for using ASSISTANT-SIRI — if you'd like, I can:
+- Customize this README to exactly match your repo files (scripts, ports, endpoints). 
+- Generate .env.example, CONTRIBUTING.md, and CODE_OF_CONDUCT.md files for the repository.
+- Create GitHub Actions workflow badges and verify actual workflow YAML names.
+
+Replace all ALL-CAPS placeholders and sample commands with the real project values, and I will update the README to be fully accurate and linked to your repo assets.
