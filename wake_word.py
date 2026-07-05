@@ -41,7 +41,7 @@ class WakeWordListener:
         custom_path = CONFIG.wake_word_model_path
         if custom_path and os.path.exists(custom_path):
             try:
-                model = Model(wakeword_models=[custom_path])
+                model = Model(wakeword_models=[custom_path], inference_framework="onnx")
                 name = os.path.splitext(os.path.basename(custom_path))[0]
                 self.using_custom_model = True
                 log_error(f"Wake word: loaded custom model '{name}' from {custom_path}")
@@ -50,7 +50,7 @@ class WakeWordListener:
                 log_error(f"Wake word: failed to load custom model at {custom_path}: {e}. Falling back to default.")
 
         # Fallback: openWakeWord's pretrained stand-in phrase
-        model = Model(wakeword_models=["hey_jarvis"])
+        model = Model(wakeword_models=["hey_jarvis"], inference_framework="onnx")
         return "hey_jarvis", model
 
     # ---------- public control API (used by the GUI) ----------
